@@ -1,0 +1,32 @@
+<html>
+<head>
+
+<!------ Include the above in your HEAD tag ---------->
+<style>
+        [v-cloak] {
+           display: none;
+        }
+     </style>
+  </head>
+<title>Todo Application</title>
+</head>
+<body>
+<div  id="todo-app">
+
+             <h1>Todos</h1>
+                <input type="text"  v-model="project" c placeholder="Add todo">
+                    <button id="checkAll" type="submit" v-on:click="createProject">Add Project</button>
+            <h1>List of Todo</h1>      
+            <ul v-for="data in projects">
+                    <li>
+                           {{data.name}}     <button>change</button><button>delete</button>
+                    </li> 
+                    </ul>
+ </div>
+
+<script type="text/javascript" src="https://unpkg.com/vue@2.5.15/dist/vue.min.js"></script>
+   <script type="text/javascript" src="https://unpkg.com/socket.io-client@2.1.0/dist/socket.io.js"></script>
+   <script type="text/javascript" src="app.js"></script>
+</body>
+
+</html>
