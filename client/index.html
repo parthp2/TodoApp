@@ -19,70 +19,7 @@
       </head>
       <body>
       <div id="todo-app" >
-        <div class="hero-body" v-show="!loggedIn" >
-            <div class="container has-text-centered">
-              <div class="column is-4 is-offset-4">
-                <h3 class="title has-text-grey">Login</h3>
-                <p class="subtitle has-text-grey">Please login to proceed.</p>
-                <div class="box">
-                 <form>
-                    <div class="field">
-                      <div class="control">
-                        <input class="input" v-model="username" type="text" placeholder="Your Email" autofocus="">
-                      </div>
-                    </div>
-                    <div class="field">
-                      <div class="control">
-                        <input class="input" v-model="password" type="password" placeholder="Your Password">
-                      </div>
-                    </div>
-                    <p v-show="failedName" class="failed">*Sorry the username
-                        <b>{{failedName}}</b> already exists.</p>
-                    <button class="button is-info"  v-on:click="joinUser()">Login</button> <button class="button is-info" v-on:click="signupUser">Sign Up</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="section"  style="background-color:#f5f5f5"v-show="loggedIn">
-            <div class="columns">
-              <div class="column is-1">
-                  <figure class="avatar">
-                      <img src="https://robohash.org/{{username}}?set=set2">
-                  </figure>
-              </div>
-              <div class="column is-4-tablet is-10-mobile name">
-                <p>
-                  <span class="title is-bold">{{username}}</span>
-                  <br>
-                </p>
-              </div>
-              <div class="column is-1-tablet has-text-centered">
-                <p class="stat-val">{{numproject}}</p>
-                <p class="stat-key">App Projects</p>
-              </div>
-              <div class="column is-1-tablet has-text-centered">
-                <p class="stat-val">{{numtodos}}</p>
-                <p class="stat-key">App ToDos</p>
-              </div>
-              <div class="column is-1-tablet  has-text-centered">
-                <p class="stat-val">{{numusers}}</p>
-                <p class="stat-key">App Users</p>
-              </div>
-              <div class="column is-4-tablet is-10-mobile name">
-                <p> 
-                  <a class="button is-primary is-outlined is-pulled-right" href="#" v-on:click="archiveTodo()" id="edit-preferences" style="margin: 5px 0">
-                    Archive Completed Todos
-                  </a>
-                  <br>
-                </p>
-              </div>
-            </div>
-          </div>
-    
-        <div class="container" v-show="loggedIn">
-      
-         <div v-show="appContent">
+        <div class="container" >
           <div class="row mt-5">
             <div class="col-md-12 text-center">
               <h1 class="h1-responsive">CS4220 ToDo App:</h1>
@@ -91,9 +28,10 @@
           <div class="row mt-5 ">
             <div class="col-md-3 offset-md-2 left-column mb-1">
               <ul class="list-group">
-
+              <!-- this vue component display all the projects from database-->                
                <project-component v-bind={projects,displayTodos}></project-component>
 
+              <!-- add projects to database with validation--> 
                 <li   class="list-group-item d-flex justify-content-between align-items-center">
                  <form>
                     <input  v-model="project" class="form-control"  placeholder="Add new Project" type="text">
@@ -104,29 +42,33 @@
                     </a>
                   </span>
                 </li>
+                <p v-if="failedproject!=''" class="has-text-danger">*Sorry the project
+                  <b>{{failedproject}}</b> already exists.</p>
               </ul>
             </div>
-            <div   v-show="!start"  class="col-md-5 list mb-1">
-              <div   class="row px-3 py-3" >
+            <!-- based on value of start like true or false it show all the todos -->
+            <div v-show="!start"  class="col-md-5 list mb-1">
+              <div class="row px-3 py-3" >
                   <display-component v-bind="{proedit,activeProject,editProject,toggleProject,removeProject}"></display-component>
               </div>
               <div class="row px-4 mt-3">
-                
+                <!-- display all the todos of selected project uisng this vue component -->
                   <todos-component v-bind="{todos,editTodo,toggleTodo,removeTodo,changeStatus}"></todos-component>
-                
               </div>
-              <div   class="row px-4 mt-1">
-                <div   class="md-form">
+              <div class="row px-4 mt-1">
+                <div class="md-form">
                   <form>
-                    <a   class="prefix">
+                    <!-- this button click call createTodo function-->
+                    <a class="prefix">
                       <i v-on:click="createTodo" class="fa fa-plus prefix"></i>
                     </a>
                     <input class="form-control" id="form2" v-model="todo" placeholder="Add new Task" type="text">
-                    <!-- <label for="form2" class="">Add new task</label> -->
+                    <span class="is-pulled-right"><a class="button  is-danger has-text-white" v-on:click="archiveTodo()">Archive Project Todos</a></span>
                   </form>
                 </div>
               </div>
             </div>
+            <!-- if we do not have projects in database then it will show this with value of start 'true' -->
             <div v-show="start" class="col-md-5 test 5 list text-center">
               <h5  class="pt-3">Choose category from menu in the left.</h5>
               <p  class="pt-5">You can also create a new category by typing the name and pressing the enter or clicking on the
@@ -136,14 +78,11 @@
                 button.
               </p>
             </div>
-            <!---->
           </div>
-        </div>
+      </div>
       </div>
         <script type="text/javascript" src="https://unpkg.com/vue@2.5.15/dist/vue.min.js"></script>
         <script type="text/javascript" src="https://unpkg.com/socket.io-client@2.1.0/dist/socket.io.js"></script>
         <script type="text/javascript" src="app.js"></script>
-
-        </body>
-
+    </body>
 </html>

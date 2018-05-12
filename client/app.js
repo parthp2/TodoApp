@@ -1,27 +1,32 @@
 const socket = io()
 
-// project Component
+// project Component - display all the projects from database
 const projectComponent = {
    template:`<div>
                 <li v-for="data in projects" v-on:click="displayTodos(data.name)" class="list-group-item d-flex justify-content-between align-items-center">
                 {{data.name}}
-                <span class="badge primary-color badge-pill">2</span>
                 </li>
             </div>`,
 
     props: ['projects','displayTodos']
 }
 
+//display Component - display only selected project name and button to remove and edit project name
 const displayComponent = {
     template:` <div class="col-md-12">
                  <input v-show="proedit"  type="text"  style="width:50%;" :value="activeProject" @keyup.enter="editProject(activeProject,$event.target.value)">
                   <label v-show="!proedit">{{activeProject}}</label>
-                    <span class="icon" style="float: right;"><i v-on:click="toggleProject(activeProject,proedit)"  class="fa fa-edit has-text-info"></i></span>
-                    <span class="icon"  style="float: right;"><i v-on:click="removeProject(activeProject)"  class="fa fa-trash has-text-danger"></i></span>
-            </div>`,
+                    <span class="icon" style="float: right;">
+                         <i v-on:click="toggleProject(activeProject,proedit)"  class="fa fa-edit has-text-info"></i>
+                    </span>
+                    <span class="icon"  style="float: right;">
+                         <i v-on:click="removeProject(activeProject)"  class="fa fa-trash has-text-danger"></i>
+                    </span>
+              </div>`,
   props:['proedit','activeProject','editProject','toggleProject','removeProject']
 }
 
+//todos Component - display all the todos from selected project from project component
 const todosComponent ={
     template:`<div class="form-group full-width">
               <div v-for="todo in todos">
@@ -37,64 +42,44 @@ const todosComponent ={
                 </span>
              </div>
              </div>`,
-    props:['todos','toggleTodo','removeTodo','editTodo','changeStatus','temptodo']
+    props:['todos','toggleTodo','removeTodo','editTodo','changeStatus']
 }
 
 
 const app =new Vue({
     el:'#todo-app',
     data:{
-        loggedIn:true,
-        temptodo:'',
         projects:[],
         todos:[],
         todo:'',
         project:'',
-        activeProject:'',
-        status:'',
+        activeProject:'',//it is project name that selected from list of projects
+        status:'', // using when we are changing status from done to undone in list of todos
         failedproject:'',
-        proedit:false,
-        username:'parth',
-        password:'',
-        failedName:'',
-        start:'',
-        ownProject:false,
-        appContent:true,
-        numproject:'',
-        numtodos:'',
-        numusers:'',
-        
+        proedit:false,//just to toggle textbox at time of updating project name by default it is false
+        start:''
     },
     methods:{
 
-        joinUser:function(){
-            if(!this.username || !this.password)
-                return
-            socket.emit('join-user',this.username,this.password)
-        },
-        signupUser:function(){
-            if(!this.username || !this.password)
-                return
-            socket.emit('create-user',this.username,this.password)
-        },
-
-        //create projects
+        //create projects take project name and add in database
         createProject:function(){
-            if(!this.project || !this.username)
+            if(!this.project)
                 return
-            socket.emit('create-project',this.project,this.username)
+            socket.emit('create-project',this.project)
         },
 
         //creating Todos for Project
         createTodo: function(){
-            if(!this.todo || !this.username)
+            if(!this.todo)
                 return
-            socket.emit('create-todo',{desc:this.todo,project:this.activeProject,user:this.username})
+            socket.emit('create-todo',{desc:this.todo,project:this.activeProject})
         },
+
         //display todos for selected project
         displayTodos:  function(project){
             if(!project)
                 return
+            //activeProject is project selected from list of project for that socketId
             this.activeProject=project
             socket.emit('display-todos',this.activeProject)
         },
@@ -111,17 +96,20 @@ const app =new Vue({
             socket.emit('change-status',todo,done,this.activeProject)
         },
 
-        //removes todos from project
+        //removes todos from list of todos for activeProject
         removeTodo: function(todo){
             if(!todo)
                 return
             socket.emit('remove-todo',todo,this.activeProject)
         },
+
+        //to modified the activeproject name
         editProject: function(oldpname,newpname){
            
-            this.activeProject=newpname
             socket.emit('edit-project',oldpname,newpname)
         },
+
+        //to enable and disable textbox when user want to modified projectname
         toggleProject: function(project,proedit){
             if(!project)
                 return
@@ -130,8 +118,9 @@ const app =new Vue({
                  this.proedit=true;
             else
                 this.proedit=false
-            //socket.emit('edit-project',project)
         },
+
+        //same as project to toggle textbox to update todos  using edit boolean value from database
         toggleTodo: function(todo,project,edit){
 
             if(edit==false)
@@ -141,152 +130,139 @@ const app =new Vue({
         
         },
 
-        //remove project from application
+        //remove project from application database
         removeProject :function(project){
             if(!project)
                 return
             socket.emit('remove-project',project)
          },
+
+         //edit todo of project based on project name
         editTodo: function(project,todo,newtodo){
             if(!newtodo)
                 return
-            
             socket.emit('edit-todo',project,todo,newtodo)
         },
+
+        //remove all the completed todos from activeProject from database
         archiveTodo: function(){
-            socket.emit('archive-todo')
+            socket.emit('archive-todo',this.activeProject)
         },
-        allTodo:function(){
-            socket.emit('all-todo')
-        }
-       
+
     },
-    components: {
+    components: { 
         'project-component': projectComponent,
         'todos-component':todosComponent,
-        'display-component':displayComponent
-        
+        'display-component':displayComponent   
     }
 })
 
 //clinet side socket events
 
+//on new socket connection it refresh projects from database for new user
 socket.on('refresh-project',projects =>{
-
-
-    app.projects=[]
-    app.projects=projects
-
+  
     if(projects.length>0)
     {
-        
-        // app.numproject=projects.length
-        //app.start=true
-        // app.activeProject=projects[0].name
-        // console.log(app.projects)
-        // console.log("---")
-        // console.log(projects)
-        // app.projects=[]
-        // app.projects=projects
+        app.projects=[]
+        app.projects=projects
+        app.start=false
+        if(app.activeProject==='')
+        {
+            app.activeProject=projects[0].name 
+        }
         app.displayTodos(app.activeProject)
     }
     else if(projects.length===0)
     {
-        // app.numproject=0
-        // app.start=true
-        // app.activeProject=''
-        // app.todos=[]
-        // app.projects=[]
-        // app.numtodos=0
+        app.start=true
+        app.activeProject=''
+        app.todos=[]
+        app.projects=[]
+       
     }
 })
 
-socket.on('refresh-todos',todos =>{
-    app.numtodos=todos.length
-})
-
-
-socket.on('refresh-users',users =>{
-    app.numusers=users.length
-})
-
+//on creation of successful project setting app variables
 socket.on('successful-project',content=>{
-    // app.start=false
     app.project=''
+    app.failedproject=''
     app.projects.push(content)
-    // app.numproject=app.projects.length
-   // app.activeProject=content.name
-    // app.todos=[]
-    //app.displayTodos(app.activeProject)
-})
 
-socket.on('successful-join', user => {
-    console.log(app.username)
-    console.log(user)
-    if (user.username===app.username) {
-        app.loggedIn = true
-        app.failedName = ''
-        app.password = ''
-        app.username=user.username
+    //if created project is first one then show that project as activeProject
+    if(app.projects.length === 1)
+    {
+        app.start=false
+        app.activeProject=app.projects[0].name
+        app.displayTodos(app.activeProject)
     }
 })
 
-socket.on('failed-join', username => {
-    console.log(username)
-    if (username === app.username)
-        app.failedName = username
-})
-
-
+//add created todo in list of todos of activeProject 
 socket.on('successful-todo',content=>{
     app.todo=''
-    app.displayTodos(app.activeProject)
-   // app.todos.push(content)
-   // app.allTodo()
+    app.displayTodos(app.activeProject) 
 })
 
-socket.on('failed-project',pname =>{
-    if(pname===app.project)
-        app.faileproject=pname
+//when project with same name is already inside database show error for project
+socket.on('failed-project',project =>{
+
+  //  if(project.name===app.project)
+        app.failedproject=project.name
 })
 
-//display todo for project
+//display todo for activeproject
 socket.on('display-todos',todos=>{
     app.todos=[]
     app.todos=todos
 })
 
+//after editing todo to toggle textbox in normal text calling toggleTodo function
 socket.on('edited-todos',todo=>{
     app.toggleTodo(todo.project,todo.desc,todo.edit)
     app.displayTodos(app.activeProject)
 })
 
-socket.on('updated-project',(projects,socketid)=>{
-    //  app.proedit=false
-    //  if()
-    // // app.projects=projects
-}),
-socket.on('own-project',projects=>{
-    app.tempproject=projects
+//display new todos for activeProject only
+socket.on('refresh-todos',(todos,project)=>{
+    if(app.activeProject===project)
+    {
+        app.todos=[]
+        app.todos=todos
+    }
 })
-socket.on('remove-project',projects=>{
-    app.projects=[]
-    app.projects=projects
 
+//after project update disable project edit textbox
+socket.on('updated-project',(projects,oldname,newpname)=>{
+    app.proedit=false
+    app.projects=projects
+    app.failedproject=''
+    if(app.activeProject===oldname)
+    {
+        app.activeProject=newpname
+    }
+
+}),
+
+//refresh projects after removing project
+socket.on('remove-project',(projects,project)=>{
+   
     if(projects.length>0)
     {
-        // app.numproject=projects.length
-        // app.start=false
+         app.start=false
+         app.projects=[]
+         app.projects=projects
+        if(app.activeProject===project)
+        {
         app.activeProject=projects[0].name
         app.displayTodos(app.activeProject)
+        }
     }
     else if(projects.length===0)
     {
-        app.numproject=0
         app.start=true
         app.activeProject=''
         app.todos=[]
         app.projects=[]
-        app.numtodos=0
     }
 })
